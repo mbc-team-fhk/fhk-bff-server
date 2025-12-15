@@ -1,15 +1,18 @@
 import axios from "axios";
 import FormData from "form-data";
-import {SECURITY_SERVER_URL, PROTECTED_PATH_RE, ROUTING_MAP } from "./config.js";
-import { clearAuthCookies, setAuthCookies, withRefreshLock } from "./authUtils";
+import {SECURITY_SERVER, PROTECTED_PATH_RE, ROUTING_MAP } from "./config.js";
+import { clearAuthCookies, setAuthCookies, withRefreshLock } from "./authUtils.js";
+import resp from "multer/lib/multer-error.js";
+
 
 function getServiceRoute(urlPath) {
     for (const route of ROUTING_MAP) {
         if (urlPath.startsWith(route.prefix)) {
-            const targetPath = urlPath.substring(route.prefix.length);
+            const servicePath = route.internalPrefix;
+            const target = urlPath.substring(route.prefix.length);
             return {
-                baseURL: route.url,
-                targetPath: route.internalPrefix + targetPath,
+                serviceUrl: route.url,
+                targetPath: servicePath + target,
             };
         }
     }
@@ -23,13 +26,18 @@ function getServiceRoute(urlPath) {
 async function callUp(req, method, urlPath, extra = {}, overrideAT) {
 
     const route = getServiceRoute(urlPath);
+    console.log("[DEBUG] serviceUrl =", route.serviceUrl);
+    console.log("[DEBUG] targetPath =", route.targetPath);
+
     if (!route) throw new Error(`[ROUTE ERR] Unknown path: ${urlPath}`);
-    const upstream = axios.create({ baseURL: route.baseURL, timeout: 10000 });
-    console.log(`[UP CALL] ${method} ${urlPath} -> ${route.baseURL}${route.targetPath} ...`);
+    console.log(`[UP CALL] ${method} ${urlPath} -> ${route.serviceUrl}${route.targetPath} ...`);
+
+    const upstream = axios.create({ baseURL: route.serviceUrl, timeout: 10000 });
 
     const at = overrideAT ?? req.cookies?.AT;
     const headers = { ...(extra.headers || {}) };
     if (at) headers.Authorization = `Bearer ${at}`;
+    console.log(headers.Authorization);
 
     return upstream.request({
         method,
@@ -44,10 +52,13 @@ async function callUp(req, method, urlPath, extra = {}, overrideAT) {
 // ===== 자동 갱신 및 프록시 함수 =====
 async function proxyWithAutoRefresh(req, res, method, urlPath, extra = {}) {
 
-    try {
+    console.log("[DEBUG] proxyWithAutoRefresh =", method, urlPath, extra);
 
+    try {
         const reqUpstream = await callUp(req, method, urlPath, extra);
+
         return res.status(reqUpstream.status).json(reqUpstream.data);
+
     } catch (error) {
 
         const errorStatus = error?.response?.status ?? 500;
@@ -55,12 +66,16 @@ async function proxyWithAutoRefresh(req, res, method, urlPath, extra = {}) {
         const refreshToken = req.cookies?.RT;
         const errorData = error?.response?.data;
 
-        // ===== 403 Forbidden 처리 (financial 멤버 서버 관련 문제) =====
-        if (errorStatus === 403) {
-            return res.status(403).json(errorData ?? {
-                isSuccess: false,
-                resMessage: "Forbidden: Not a registered or active member of this service."
-            });
+        console.log("[DEBUG] Error Info:", {
+            errorStatus,
+            isProtected,
+            refreshToken,
+            errorData,
+        });
+
+        // ===== 403 Forbidden 처리 (각 service artifact 멤버 서버 관련 문제) =====
+        if (res.status === 403 && res.code === "FINANCIAL_NOT_REGISTERED") {
+            return res;
         }
 
         // ===== 401 Unauthorized 처리 (토큰/인증 서버 관련 문제) =====
@@ -74,7 +89,7 @@ async function proxyWithAutoRefresh(req, res, method, urlPath, extra = {}) {
         // ===== 토큰 자동 갱신 시도 (FHK 인증 서버 호출) =====
         try {
             const tokens = await withRefreshLock(refreshToken, async (rt) => {
-                const authUpstream = axios.create({ baseURL: SECURITY_SERVER_URL, timeout: 5000 });
+                const authUpstream = axios.create({ baseURL: SECURITY_SERVER, timeout: 5000 });
                 const refreshRes = await authUpstream.post("/auth/refresh", { refreshToken: rt });
                 const payload = refreshRes?.data?.result ?? refreshRes?.data;
                 const at2 = payload?.accessToken;
