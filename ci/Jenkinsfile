@@ -69,47 +69,45 @@ pipeline {
             }
         }
 
-        stage('Deploy to k3s (staging/prod, tagged only)') {
-            steps {
-                script {
-                    def tag = sh(
-                        script: "git describe --tags --exact-match 2>/dev/null || echo NO_TAG",
-                        returnStdout: true
-                    ).trim()
+       stage('Deploy to k3s (staging/prod, tagged only)') {
+           steps {
+               script {
+                   def tag = sh(
+                       script: "git describe --tags --exact-match 2>/dev/null || echo NO_TAG",
+                       returnStdout: true
+                   ).trim()
 
-                    if (env.BRANCH_NAME == 'dev' || tag == 'NO_TAG') {
-                        echo "dev 브랜치이거나 태그 없음 -> 배포 스킵"
-                        return
-                    }
+                   if (env.BRANCH_NAME == 'dev' || tag == 'NO_TAG') {
+                       echo "dev 브랜치이거나 태그 없음 -> 배포 스킵"
+                       return
+                   }
 
-                    // namespace 및 manifest 경로 결정
-                    String k8sNamespace
-                    String k8sDir
+                   String k8sNamespace
+                   String k8sDir
 
-                    if (env.BRANCH_NAME == 'staging') {
-                        k8sNamespace = 'staging'
-                        k8sDir = 'infra/k3s/staging'
-                    } else if (env.BRANCH_NAME == 'prod') {
-                        k8sNamespace = 'prod'
-                        k8sDir = 'infra/k3s/prod'
-                    } else {
-                        echo "지원하지 않는 브랜치 -> 배포 스킵"
-                        return
-                    }
+                   if (env.BRANCH_NAME == 'staging') {
+                       k8sNamespace = 'staging'
+                       k8sDir = 'infra/k3s/staging'
+                   } else if (env.BRANCH_NAME == 'prod') {
+                       k8sNamespace = 'prod'
+                       k8sDir = 'infra/k3s/prod'
+                   } else {
+                       echo "지원하지 않는 브랜치 -> 배포 스킵"
+                       return
+                   }
 
-                    withEnv(["KUBECONFIG=/var/lib/jenkins/.kube/config"]) {
-                        sh """
-                          kubectl -n ${k8sNamespace} apply -f ${k8sDir}/deployment.yaml
-                          kubectl -n ${k8sNamespace} apply -f ${k8sDir}/service.yaml
-                          kubectl -n ${k8sNamespace} apply -f ${k8sDir}/ingress.yaml
+                   withEnv(["KUBECONFIG=/var/lib/jenkins/.kube/config"]) {
+                       sh """
+                         kubectl -n ${k8sNamespace} apply -f ${k8sDir}/deployment.yaml
+                         kubectl -n ${k8sNamespace} apply -f ${k8sDir}/service.yaml
 
-                          kubectl -n ${k8sNamespace} rollout restart deployment ${APP_NAME}
-                          kubectl -n ${k8sNamespace} rollout status deployment ${APP_NAME} --timeout=120s
-                        """
-                    }
-                }
-            }
-        }
+                         kubectl -n ${k8sNamespace} rollout restart deployment ${APP_NAME}
+                         kubectl -n ${k8sNamespace} rollout status deployment ${APP_NAME} --timeout=120s
+                       """
+                   }
+               }
+           }
+       }
     }
 
     post {
