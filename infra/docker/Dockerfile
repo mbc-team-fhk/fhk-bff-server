@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 # 소스 코드 복사
-COPY ../.. .
+COPY . .
 
 # 포트 설정
 EXPOSE 4000
