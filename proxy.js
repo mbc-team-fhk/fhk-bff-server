@@ -73,8 +73,8 @@ async function proxyWithAutoRefresh(req, res, method, urlPath, extra = {}) {
             errorData,
         });
 
-        // ===== 403 Forbidden 처리 (각 service artifact 멤버 서버 관련 문제) =====
-        if (res.status === 403 && res.code === "FINANCIAL_NOT_REGISTERED") {
+        // ===== 404 MEMBER_NOT_FOUND 처리 (각 service artifact 멤버 서버 관련 문제) =====
+        if (res.status === 404 && res.code === "MEMBER_NOT_FOUND") {
             return res;
         }
 

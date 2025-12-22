@@ -2,51 +2,55 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // 서비스 URL 환경 변수
-const SECURITY_SERVER = process.env.SECURITY_SERVER_URL;
-//const ASSET_SERVER_URL = process.env.ASSET_SERVER_URL;
+const SECURITY_SERVER = process.env.FHK_SECURITY_SERVER_URL;
+const ASSET_SERVER = process.env.FHK_ASSET_SERVER_URL;
 
 const SERVICES = {
-
-   /*
-    RESERVATION: {
-        MEMBER: process.env.RESERVATION_MEMBER_SERVICE_URL,
-    },*/
-
-    CHAT: {
-        CHATTING: process.env.CHAT_CHATTING_SERVICE_URL,
-        NOTIFICATION: process.env.CHAT_NOTIFICATION_SERVICE_URL,
+    TICKETING: {
+        FRONT_APP: process.env.FHK_TICKETING_FRONT_APP_URL,
+        MEMBER: process.env.FHK_TICKETING_MEMBER_SERVICE_URL,
+        MOVIE: process.env.FHK_TICKETING_MOVIE_SERVICE_URL,
+        PAYMENT: process.env.FHK_TICKETING_PAYMENT_SERVICE_URL,
+        RESERVATION: process.env.FHK_TICKETING_RESERVATION_SERVICE_URL,
+        TICKET: process.env.FHK_TICKETING_TICKET_SERVICE_URL,
     },
-
+/*    CHATTING: {
+        FRONT_APP: process.env.FHK_CHATTING_FRONT_APP_URL,
+        CHAT: process.env.FHK_CHATTING_CHATTING_SERVICE_URL,
+        NOTIFICATION: process.env.FHK_CHATTING_NOTIFICATION_SERVICE_URL,
+    },
     FINANCIAL: {
-        CLIENT: process.env.FINANCIAL_CLIENT_SERVICE_URL,
-        PAYMENT: process.env.FINANCIAL_PAYMENT_SERVICE_URL,
-    },
+        FRONT_APP: process.env.FHK_FINANCIAL_FRONT_APP_URL,
+        CLIENT: process.env.FHK_FINANCIAL_CLIENT_SERVICE_URL,
+        PAYMENT: process.env.FHK_FINANCIAL_PAYMENT_SERVICE_URL,
+    },*/
 };
 
 const ARTIFACT_ROUTES = {
-
-/*       reservation: [
-        { sub: "member", url: SERVICES.RESERVATION.MEMBER, internal: "/member" },
-    ],*/
-
-    chat: [
-        { sub: "chatrooms", url: SERVICES.CHAT.CHATTING, internal: "/chatrooms" },
-        { sub: "chat-users", url: SERVICES.CHAT.CHATTING, internal: "/chat-users" },
-        { sub: "notification", url: SERVICES.CHAT.NOTIFICATION, internal: "/notification" },
+    ticketing: [
+        { sub: "front-app", url: SERVICES.TICKETING.FRONT, internal: "/" },
+        { sub: "member", url: SERVICES.TICKETING.MEMBER, internal: "/member" },
+        { sub: "movie", url: SERVICES.TICKETING.MOVIE, internal: "/movie" },
+        { sub: "payment", url: SERVICES.TICKETING.PAYMENT, internal: "/payment" },
+        { sub: "reservation", url: SERVICES.TICKETING.RESERVATION, internal: "/reservation" },
+        { sub: "ticket", url: SERVICES.TICKETING.TICKET, internal: "/ticket" },
     ],
-
+/*    chatting: [
+        { sub: "front-app", url: SERVICES.CHATTING.FRONT, internal: "/" },
+        { sub: "chatrooms", url: SERVICES.CHATTING.CHAT, internal: "/chatrooms" },
+        { sub: "chat-users", url: SERVICES.CHATTING.CHAT, internal: "/chat-users" },
+        { sub: "notification", url: SERVICES.CHATTING.NOTIFICATION, internal: "/notification" },
+    ],
     financial: [
-        { sub: "store", url: SERVICES.FINANCIAL.CLIENT, internal: "/store" },
-        { sub: "customer", url: SERVICES.FINANCIAL.CLIENT, internal: "/customer" },
-
-        //{ sub: "payment", url: SERVICES.FINANCIAL.PAYMENT, internal: "/payment" },
-    ],
+        { sub: "front-app", url: SERVICES.FINANCIAL.FRONT, internal: "/" },
+        { sub: "client", url: SERVICES.FINANCIAL.CLIENT, internal: "/" },
+        { sub: "payment", url: SERVICES.FINANCIAL.PAYMENT, internal: "/" },
+    ],*/
 };
 
 const ROUTING_MAP = [
-
-    { prefix: "/api/auth",  url: SECURITY_SERVER, internalPrefix: "/auth" },
-    //{ prefix: "/api/asset", url: ASSET_SERVER_URL,    internalPrefix: "/asset" },
+    { prefix: "/api/auth", url: SECURITY_SERVER, internalPrefix: "/api/auth" },
+    { prefix: "/api/asset", url: ASSET_SERVER, internalPrefix: "/asset" },
 
     ...Object.entries(ARTIFACT_ROUTES).flatMap(([artifact, routes]) =>
         routes.map(route => ({
@@ -60,13 +64,12 @@ const ROUTING_MAP = [
 const PROTECTED_PATH_RE = /^\/api\/(member|orders|payment|store)(\/|$)/i;
 const PUBLIC_AUTH_PATH_RE = /^\/api\/auth\/(login|logout|refresh|v1\/login)$/i;
 const FRONTEND_URL = process.env.FRONTEND_URL;
-const ALLOWED_ORIGINS = [FRONTEND_URL, ];
+const ALLOWED_ORIGINS = [FRONTEND_URL];
 
 export {
     SECURITY_SERVER,
-    //ASSET_SERVER_URL,
+    ASSET_SERVER,
     ROUTING_MAP,
-
     PROTECTED_PATH_RE,
     PUBLIC_AUTH_PATH_RE,
     FRONTEND_URL,
