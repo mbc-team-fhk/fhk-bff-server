@@ -57,7 +57,7 @@ spec:
 
             # Financial services
             - name: FHK_FINANCIAL_FRONT_APP_URL
-              value: "http://fhk-financial-front-app:8080"
+              value: "http://fhk-financial-front-app:80"
             - name: FHK_FINANCIAL_CLIENT_SERVICE_URL
               value: "http://fhk-financial-client-service:8080"
             - name: FHK_FINANCIAL_PAYMENT_SERVICE_URL

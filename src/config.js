@@ -5,6 +5,7 @@ dotenv.config();
 const SECURITY_SERVER = process.env.FHK_SECURITY_SERVER_URL;
 const ASSET_SERVER = process.env.FHK_ASSET_SERVER_URL;
 
+
 const SERVICES = {
     TICKETING: {
         FRONT_APP: process.env.FHK_TICKETING_FRONT_APP_URL,
@@ -18,13 +19,14 @@ const SERVICES = {
         FRONT_APP: process.env.FHK_CHATTING_FRONT_APP_URL,
         CHAT: process.env.FHK_CHATTING_CHATTING_SERVICE_URL,
         NOTIFICATION: process.env.FHK_CHATTING_NOTIFICATION_SERVICE_URL,
-    },
+    },*/
     FINANCIAL: {
         FRONT_APP: process.env.FHK_FINANCIAL_FRONT_APP_URL,
         CLIENT: process.env.FHK_FINANCIAL_CLIENT_SERVICE_URL,
         PAYMENT: process.env.FHK_FINANCIAL_PAYMENT_SERVICE_URL,
-    },*/
+    },
 };
+
 
 const ARTIFACT_ROUTES = {
     ticketing: [
@@ -40,16 +42,17 @@ const ARTIFACT_ROUTES = {
         { sub: "chatrooms", url: SERVICES.CHATTING.CHAT, internal: "/chatrooms" },
         { sub: "chat-users", url: SERVICES.CHATTING.CHAT, internal: "/chat-users" },
         { sub: "notification", url: SERVICES.CHATTING.NOTIFICATION, internal: "/notification" },
-    ],
+    ],*/
     financial: [
         { sub: "front-app", url: SERVICES.FINANCIAL.FRONT, internal: "/" },
         { sub: "client", url: SERVICES.FINANCIAL.CLIENT, internal: "/" },
         { sub: "payment", url: SERVICES.FINANCIAL.PAYMENT, internal: "/" },
-    ],*/
+    ],
 };
 
+
 const ROUTING_MAP = [
-    { prefix: "/api/auth", url: SECURITY_SERVER, internalPrefix: "/api/auth" },
+    { prefix: "/api/auth", url: SECURITY_SERVER, internalPrefix: "/auth" },
     { prefix: "/api/asset", url: ASSET_SERVER, internalPrefix: "/asset" },
 
     ...Object.entries(ARTIFACT_ROUTES).flatMap(([artifact, routes]) =>
@@ -63,8 +66,8 @@ const ROUTING_MAP = [
 
 const PROTECTED_PATH_RE = /^\/api\/(member|orders|payment|store)(\/|$)/i;
 const PUBLIC_AUTH_PATH_RE = /^\/api\/auth\/(login|logout|refresh|v1\/login)$/i;
-const FRONTEND_URL = process.env.FRONTEND_URL;
-const ALLOWED_ORIGINS = [FRONTEND_URL];
+const FHK_FRONT_APP = process.env.FHK_FRONT_APP_URL;
+const ALLOWED_ORIGINS = [FHK_FRONT_APP, SERVICES.TICKETING.FRONT_APP, SERVICES.FINANCIAL.FRONT_APP];
 
 export {
     SECURITY_SERVER,
@@ -72,6 +75,6 @@ export {
     ROUTING_MAP,
     PROTECTED_PATH_RE,
     PUBLIC_AUTH_PATH_RE,
-    FRONTEND_URL,
+    FHK_FRONT_APP,
     ALLOWED_ORIGINS,
 };
