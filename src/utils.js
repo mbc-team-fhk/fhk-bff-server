@@ -1,6 +1,7 @@
 const refreshLocks = new Map();
 const COOKIE_BASE = { httpOnly: true, sameSite: "lax", path: "/", secure: process.env.NODE_ENV === "production" };
 
+
 function withRefreshLock(key, task) {
 
     const prev = refreshLocks.get(key) || Promise.resolve();
@@ -10,6 +11,7 @@ function withRefreshLock(key, task) {
         if (refreshLocks.get(key) === next) refreshLocks.delete(key);
     });
 }
+
 
 function setAuthCookies(res, tokens) {
     const opts = { ...COOKIE_BASE };
@@ -24,5 +26,33 @@ function clearAuthCookies(res, reason = "") {
     res.clearCookie("RT", opts);
 }
 
+function handleApiError(res, e) {
+    const st = e?.response?.status ?? 500;
+    res.status(st).json(e?.response?.data ?? {isSuccess: false, resMessage: String(e)});
+}
 
-export { setAuthCookies, clearAuthCookies, withRefreshLock };
+function requestLogger(req, res, next) {
+    const start = Date.now();
+
+    console.log(`[REQ] ${req.method} ${req.originalUrl}`);
+
+    if (Object.keys(req.body || {}).length > 0) {
+        console.log(`[REQ BODY]`, req.body);
+    }
+
+
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`[RES] ${req.method} ${req.originalUrl} ${res.statusCode} (${duration}ms)`);
+    });
+
+    next();
+}
+
+export {
+    setAuthCookies,
+    clearAuthCookies,
+    withRefreshLock,
+    handleApiError,
+    requestLogger,
+};

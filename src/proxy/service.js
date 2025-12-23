@@ -1,8 +1,6 @@
 import axios from "axios";
-import FormData from "form-data";
-import {SECURITY_SERVER, PROTECTED_PATH_RE, ROUTING_MAP } from "./config.js";
-import { clearAuthCookies, setAuthCookies, withRefreshLock } from "./authUtils.js";
-import resp from "multer/lib/multer-error.js";
+import {SECURITY_SERVER, PROTECTED_PATH_RE, ROUTING_MAP } from "../config.js";
+import { clearAuthCookies, setAuthCookies, withRefreshLock, handleApiError, requestLogger} from "../utils.js";
 
 
 function getServiceRoute(urlPath) {
@@ -50,12 +48,12 @@ async function callUp(req, method, urlPath, extra = {}, overrideAT) {
 
 
 // ===== 자동 갱신 및 프록시 함수 =====
-async function proxyWithAutoRefresh(req, res, method, urlPath, extra = {}) {
+function proxyWithAutoRefresh(req, res, method, urlPath, extra = {}) {
 
     console.log("[DEBUG] proxyWithAutoRefresh =", method, urlPath, extra);
 
     try {
-        const reqUpstream = await callUp(req, method, urlPath, extra);
+        const reqUpstream = callUp(req, method, urlPath, extra);
 
         return res.status(reqUpstream.status).json(reqUpstream.data);
 
@@ -88,7 +86,7 @@ async function proxyWithAutoRefresh(req, res, method, urlPath, extra = {}) {
 
         // ===== 토큰 자동 갱신 시도 (FHK 인증 서버 호출) =====
         try {
-            const tokens = await withRefreshLock(refreshToken, async (rt) => {
+            const tokens = withRefreshLock(refreshToken, async (rt) => {
                 const authUpstream = axios.create({ baseURL: SECURITY_SERVER, timeout: 5000 });
                 const refreshRes = await authUpstream.post("/auth/refresh", { refreshToken: rt });
                 const payload = refreshRes?.data?.result ?? refreshRes?.data;
@@ -99,7 +97,7 @@ async function proxyWithAutoRefresh(req, res, method, urlPath, extra = {}) {
             });
 
             setAuthCookies(res, { accessToken: tokens.at, refreshToken: tokens.rt });
-            const reqRefreshed = await callUp(req, method, urlPath, extra, tokens.at);
+            const reqRefreshed = callUp(req, method, urlPath, extra, tokens.at);
             return res.status(reqRefreshed.status).json(reqRefreshed.data);
 
         } catch (errorRefreshed) {
@@ -114,58 +112,5 @@ async function proxyWithAutoRefresh(req, res, method, urlPath, extra = {}) {
 }
 
 
-// ----------------------------------------------------
-// 멀티파트 데이터 프록시 함수
-// ----------------------------------------------------
-async function handleMultipartProxy(req, res, method, urlPath) {
-    // 파일 업로드 로직은 토큰 갱신 없이 단순 프록시만 수행
-    try {
-        const at = req.cookies?.AT;
-        if (!at) {
-            clearAuthCookies(res, "upload-no-at");
-            return res.status(401).json({ isSuccess: false, resMessage: "Unauthorized: No AT cookie for upload" });
-        }
 
-        const fd = new FormData();
-        // ... (FormData 구성 로직)
-
-        const headers = { ...fd.getHeaders(), Authorization: `Bearer ${at}` };
-        const targetServiceURL = getServiceBaseURL(urlPath);
-
-        const itemUpstream = axios.create({ baseURL: targetServiceURL, timeout: 20000 });
-        const targetPath = urlPath.startsWith("/api") ? urlPath.replace("/api", "") : urlPath;
-
-        const r = await itemUpstream.request({ method, url: targetPath, data: fd, headers });
-        res.status(r.status).json(r.data);
-    } catch (e) {
-        res.status(e?.response?.status ?? 500).json(e?.response?.data ?? {isSuccess: false, resMessage: "Upload failed"});
-    }
-}
-
-
-// ----------------------------------------------------
-// 에셋 서버 전용 프록시 함수 (재사용성 극대화)
-// ----------------------------------------------------
-async function proxyAssetRequest(req, res) {
-    try {
-        const route = getServiceRoute(req.path);
-        if (!route || route.baseURL !== ASSET_SERVICE_URL) {
-            return res.status(404).end();
-        }
-
-        // 에셋 요청은 인증 불필요 (대부분의 경우)
-        const assetUpstream = axios.create({ baseURL: route.baseURL, responseType: "stream" });
-
-        // targetPath는 /images/filename.jpg 형태가 됩니다.
-        const r = await assetUpstream.get(route.targetPath);
-
-        // 헤더 복사 및 스트리밍
-        Object.entries(r.headers || {}).forEach(([k, v]) => res.setHeader(k, v));
-        r.data.pipe(res);
-
-    } catch (e) {
-        res.status(e?.response?.status ?? 500).end();
-    }
-}
-
-export { proxyWithAutoRefresh, handleMultipartProxy, proxyAssetRequest };
+export { proxyWithAutoRefresh,};
