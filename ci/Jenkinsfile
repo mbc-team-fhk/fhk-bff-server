@@ -100,11 +100,11 @@ pipeline {
                        "GIT_TAG=${tag}",
                        "KUBECONFIG=/var/lib/jenkins/.kube/config"
                    ]) {
-                       sh '''
+                       sh """
                          echo "Using GIT_TAG=$GIT_TAG"
                          envsubst < ${k8sDir}/deployment.yaml | kubectl -n ${k8sNamespace} apply -f -
                          kubectl -n ${k8sNamespace} rollout status deployment fhk-bff-server --timeout=300s
-                       '''
+                       """
                    }
                }
            }
