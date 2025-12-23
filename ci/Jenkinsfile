@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         APP_NAME        = 'fhk-bff-server'
-        REGISTRY        = 'juno6800'
+        REGISTRY        = 'chaeyun430'
         IMAGE           = "${REGISTRY}/${APP_NAME}"
         DOCKERFILE_PATH = 'infra/docker/Dockerfile'  // BFF Dockerfile 경로
     }
@@ -54,7 +54,7 @@ pipeline {
                     env.IMAGE_TAG = tag
 
                     withCredentials([usernamePassword(
-                        credentialsId: 'dockerhub-cred',
+                        credentialsId: 'dockerhub-cred-chaeyun',
                         usernameVariable: 'DOCKERHUB_USER',
                         passwordVariable: 'DOCKERHUB_PASS'
                     )]) {
