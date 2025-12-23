@@ -96,15 +96,14 @@ pipeline {
                        return
                    }
 
-                   withEnv([
-                       "GIT_TAG=${tag}",
-                       "KUBECONFIG=/var/lib/jenkins/.kube/config"
-                   ]) {
-                       sh '''
-                         echo "Using GIT_TAG=$GIT_TAG"
-                         envsubst < ${k8sDir}/deployment.yaml | kubectl -n ${k8sNamespace} apply -f -
-                         kubectl -n ${k8sNamespace} rollout status deployment fhk-bff-server --timeout=300s
-                       '''
+                   withEnv(["KUBECONFIG=/var/lib/jenkins/.kube/config"]) {
+                       sh """
+                         kubectl -n ${k8sNamespace} apply -f ${k8sDir}/deployment.yaml
+                         kubectl -n ${k8sNamespace} apply -f ${k8sDir}/service.yaml
+
+                         kubectl -n ${k8sNamespace} rollout restart deployment ${APP_NAME}
+                         kubectl -n ${k8sNamespace} rollout status deployment ${APP_NAME} --timeout=120s
+                       """
                    }
                }
            }
