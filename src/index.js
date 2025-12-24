@@ -3,7 +3,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import axios from "axios";
 import { ROUTING_MAP, FHK_FRONT_APP, PUBLIC_AUTH_PATH_RE, PROTECTED_PATH_RE, ALLOWED_ORIGINS } from "./config.js";
-import { proxyWithAutoRefresh, authRouter, assetRouter} from "./proxy";
+import assetRouter from "./proxy/asset.js";
+import authRouter from "./proxy/auth.js";
+import { proxyWithAutoRefresh,} from "./proxy/service.js";
 
 
 axios.interceptors.request.use(req => {
