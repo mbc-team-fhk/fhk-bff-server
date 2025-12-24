@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 4000
 
 # 실행
-CMD ["node", "index.js"]
+CMD ["node", "src/index.js"]
