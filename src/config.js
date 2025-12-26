@@ -2,28 +2,29 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // 서비스 URL 환경 변수
-const SECURITY_SERVER = process.env.FHK_SECURITY_SERVER_URL;
-const ASSET_SERVER = process.env.FHK_ASSET_SERVER_URL;
+const SECURITY_SERVER = "http://fhk-security-server:8080";
+const ASSET_SERVER = "http://fhk-asset-server:8080";
 
 
 const SERVICES = {
     TICKETING: {
-        FRONT_APP: process.env.FHK_TICKETING_FRONT_APP_URL,
-        MEMBER: process.env.FHK_TICKETING_MEMBER_SERVICE_URL,
-        MOVIE: process.env.FHK_TICKETING_MOVIE_SERVICE_URL,
-        PAYMENT: process.env.FHK_TICKETING_PAYMENT_SERVICE_URL,
-        RESERVATION: process.env.FHK_TICKETING_RESERVATION_SERVICE_URL,
-        TICKET: process.env.FHK_TICKETING_TICKET_SERVICE_URL,
+        FRONT_APP: "http://fhk-ticketing-front-app:80",
+        MEMBER: "http://fhk-ticketing-member-service:8080",
+        MOVIE: "http://fhk-ticketing-movie-service:8080",
+        PAYMENT: "http://fhk-ticketing-payment-service:8080",
+        RESERVATION: "http://fhk-ticketing-reservation-service:8080",
+        TICKET: "http://fhk-ticketing-ticket-service:8080",
     },
 /*    CHATTING: {
-        FRONT_APP: process.env.FHK_CHATTING_FRONT_APP_URL,
-        CHAT: process.env.FHK_CHATTING_CHATTING_SERVICE_URL,
-        NOTIFICATION: process.env.FHK_CHATTING_NOTIFICATION_SERVICE_URL,
+        FRONT_APP: "http://fhk-chatting-front-app:80",
+        CHAT: "http://fhk-chatting-chat-service:8080",
+        NOTIFICATION: "http://fhk-chatting-notification-service:8080",
     },*/
     FINANCIAL: {
-        FRONT_APP: process.env.FHK_FINANCIAL_FRONT_APP_URL,
-        CLIENT: process.env.FHK_FINANCIAL_CLIENT_SERVICE_URL,
-        PAYMENT: process.env.FHK_FINANCIAL_PAYMENT_SERVICE_URL,
+        FRONT_APP: "http://fhk-financial-front-app:80",
+        CUSTOMER: "http://fhk-financial-customer-service:8080",
+        MERCHANT: "http://fhk-financial-merchant-service:8080",
+        PAYMENT: "http://fhk-financial-payment-service:8080",
     },
 };
 
@@ -45,8 +46,9 @@ const ARTIFACT_ROUTES = {
     ],*/
     financial: [
         { sub: "front-app", url: SERVICES.FINANCIAL.FRONT, internal: "/" },
-        { sub: "client", url: SERVICES.FINANCIAL.CLIENT, internal: "/" },
-        { sub: "payment", url: SERVICES.FINANCIAL.PAYMENT, internal: "/" },
+        { sub: "customer", url: SERVICES.FINANCIAL.CUSTOMER, internal: "/customer" },
+        { sub: "merchant", url: SERVICES.FINANCIAL.MERCHANT, internal: "/merchant" },
+        { sub: "payment", url: SERVICES.FINANCIAL.PAYMENT, internal: "/payment" },
     ],
 };
 
@@ -66,7 +68,7 @@ const ROUTING_MAP = [
 
 const PROTECTED_PATH_RE = /^\/api\/(member|orders|payment|store)(\/|$)/i;
 const PUBLIC_AUTH_PATH_RE = /^\/api\/auth\/(login|logout|refresh|v1\/login)$/i;
-const FHK_FRONT_APP = process.env.FHK_FRONT_APP_URL;
+const FHK_FRONT_APP = "https://fhk-portal-front-app:80";
 const ALLOWED_ORIGINS = [FHK_FRONT_APP, SERVICES.TICKETING.FRONT_APP, SERVICES.FINANCIAL.FRONT_APP];
 
 export {
