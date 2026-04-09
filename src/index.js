@@ -41,7 +41,7 @@ app.use(cookieParser());
 // ===== 동적 API 라우팅 (proxyWithAutoRefresh 사용) =====
 ROUTING_MAP.forEach(route => {
 
-    if (route.prefix === "/api/auth"){
+    if (route.prefix === "/api/security"){
         app.use(ROUTING_MAP.internalPrefix, authRouter);
     }else if(route.prefix === "/api/asset"){
         app.use(ROUTING_MAP.internalPrefix, assetRouter);
@@ -54,12 +54,38 @@ ROUTING_MAP.forEach(route => {
 });
 
 
+
 app.get("/ping", (req, res) => res.json({ message: "bff test" }));
 //app.use((req, res) => res.status(404).json({ isSuccess: false, resCode: 404, resMessage: "bff 404" }));
 
+/**
+ * asyncHandler
+ */
+app.use((err, req, res, _next) => {
+    console.error("[BFF ERROR]", err);
+
+    if (err.response) {
+        return res.status(err.response.status).json(
+            err.response.data ?? {
+                isSuccess: false,
+                resCode: err.response.status,
+                resMessage: "Upstream Error",
+            }
+        );
+    }
+
+    return res.status(500).json({
+        isSuccess: false,
+        resCode: 500,
+        resMessage: err.message || "Internal Server Error",
+    });
+});
+
+/**
+ * 요청 리스닝 부분
+ */
 app.listen(4000, () => {
     console.log("bff 시작");
     console.log(ROUTING_MAP);
     console.log(ALLOWED_ORIGINS);
-
 });
