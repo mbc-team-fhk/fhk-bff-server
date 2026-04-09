@@ -1,100 +1,78 @@
 import express from "express";
-import axios from "axios";
-import {SECURITY_SERVER} from "../config.js";
-import {clearAuthCookies, setAuthCookies} from "../utils.js";
+import { securityApi } from "../clients/securityApi.js";
+import { asyncHandler } from "../lib/asyncHandler.js";
+import { ok } from "../lib/response.js";
+import { makeProxyHandler } from "../lib/proxyHandler.js";
+import { clearAuthCookies, setAuthCookies } from "../utils.js";
 
 const authRouter = express.Router();
 
-
-// ----- fhk 계정 로그인 -----
-authRouter.post("/api/auth/login", async (req, res) => {
-
-    try {
-        const authUpstream = axios.create({
-            baseURL: SECURITY_SERVER,
-            timeout: 6000
-        });
-
-        const r = await authUpstream.post("/api/auth/login", req.body);
+/**
+ * 로그인
+ * 기존 JWT 토큰방식을 BFF에서 관리하고
+ * 쿠키-세션 형태로 제공
+ */
+authRouter.post(
+    "/auth/login",
+    asyncHandler(async (req, res) => {
+        const r = await securityApi.post("/auth/login", req.body);
 
         const at = r?.data?.result?.accessToken;
         const rt = r?.data?.result?.refreshToken;
-        if (!at || !rt) throw new Error("토큰 발급 실패");
+
+        if (!at || !rt) {
+            throw new Error("토큰 발급 실패");
+        }
 
         setAuthCookies(res, { accessToken: at, refreshToken: rt });
 
-        return res.json({
-            isSuccess: true,
-            resCode: 200,
-            resMessage: "OK",
-            result: { user: r?.data?.result ?? r?.data }
+        return ok(res, {
+            user: r?.data?.result ?? r?.data,
         });
+    })
+);
 
-    } catch (e) {
-        handleApiError(res, e);
-    }
-});
+/**
+ * FHK 통합계정 회원가입
+ * 각 토이프로젝트 별 별도가입 (닉네임 설정 등) 필요
+ */
+authRouter.post(
+    "/accounts",
+    makeProxyHandler({
+        client: securityApi,
+        method: "post",
+        pathResolver: () => "/accounts",
+    })
+);
 
-// ----- fhk 계정 등록 -----
-authRouter.post("/api/accounts", async (req, res) => {
-    try {
+/**
+ * FHK 통합계정 조회
+ */
+authRouter.get(
+    "/accounts/:accountId",
+    makeProxyHandler({
+        client: securityApi,
+        method: "get",
+        pathResolver: (req) => `/accounts/${req.params.accountId}`,
+    })
+);
 
-        const authUpstream = axios.create({
-            baseURL: SECURITY_SERVER,
-            timeout: 5000
-        });
-        const accountRes = await authUpstream.post("/api/accounts", req.body);
+/**
+ * FHK 통합계정 로그아웃
+ * Security 서버측에서는 JWT 토큰버전 관리
+ * BFF 에서는 쿠키 삭제처리
+ */
+authRouter.post(
+    "/auth/logout",
+    asyncHandler(async (_req, res) => {
+        try {
+            await securityApi.post("/auth/logout");
+        } finally { // 서버측 JWT 토큰 관리 실패해도 웹상 쿠키삭제 우선
+            clearAuthCookies(res, "logout");
+        }
 
-        return res.json({
-            isSuccess: true,
-            resCode: 200,
-            resMessage: "OK",
-            result: accountRes?.data?.result ?? accountRes?.data
-        });
-
-    } catch (e) {
-        return handleApiError(res, e);
-    }
-});
-
-// ----- fhk 계정 조회 -----
-authRouter.get("/api/accounts/:accountId", async (req, res) => {
-    const { accountId } = req.params;
-
-    try {
-        const authUpstream = axios.create({
-            baseURL: SECURITY_SERVER,
-            timeout: 5000
-        });
-
-        const accountRes = await authUpstream.get(`/api/accounts/${accountId}`);
-
-        return res.json({
-            isSuccess: true,
-            resCode: 200,
-            resMessage: "OK",
-            result: accountRes?.data?.result ?? accountRes?.data
-        });
-
-    } catch (e) {
-        return handleApiError(res, e);
-    }
-});
-
-// =======================================================
-
-
-authRouter.post("/api/auth/logout", async (_req, res) => {
-    try {
-        const authUpstream = axios.create({ baseURL: SECURITY_SERVER, timeout: 5000 });
-        // 인증 서버의 로그아웃 엔드포인트 호출 (RT 무효화 등)
-        await authUpstream.post("/auth/logout");
-    } catch (e) {
-        handleApiError(res, e);
-    }
-    clearAuthCookies(res, "logout");
-    return res.json({ isSuccess: true });
-});
-
+        return ok(res);
+    })
+);
 
 export default authRouter;
