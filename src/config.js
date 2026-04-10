@@ -5,7 +5,11 @@ dotenv.config();
 const SECURITY_SERVER = "http://fhk-security-server:8080";
 const ASSET_SERVER = "http://fhk-asset-server:8080";
 
-
+/**
+ * ...... dev환경의 default 옵션 같음 -> 배포시 deployment에서 경로지정
+ * @todo http://localhost:XXXX 로 수정해야하는지 확인
+ * @type {{TICKETING: {PAYMENT: string, MOVIE: string, FRONT_APP: string, RESERVATION: string, TICKET: string, MEMBER: string}, FINANCIAL: {PAYMENT: string, FRONT_APP: string, CUSTOMER: string, MERCHANT: string}}}
+ */
 const SERVICES = {
     TICKETING: {
         FRONT_APP: "http://fhk-ticketing-front-app:80",
@@ -54,7 +58,6 @@ const ARTIFACT_ROUTES = {
 
 
 const ROUTING_MAP = [
-    { prefix: "/api/auth", url: SECURITY_SERVER, internalPrefix: "/auth" },
     { prefix: "/api/asset", url: ASSET_SERVER, internalPrefix: "/asset" },
 
     ...Object.entries(ARTIFACT_ROUTES).flatMap(([artifact, routes]) =>
