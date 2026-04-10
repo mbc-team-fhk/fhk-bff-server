@@ -36,13 +36,13 @@ app.use(cookieParser());
 
 
 
-
+app.use("/api/security", authRouter);
 
 // ===== 동적 API 라우팅 (proxyWithAutoRefresh 사용) =====
 ROUTING_MAP.forEach(route => {
 
     if (route.prefix === "/api/security"){
-        app.use(ROUTING_MAP.internalPrefix, authRouter);
+        // app.use(ROUTING_MAP.internalPrefix, authRouter);
     }else if(route.prefix === "/api/asset"){
         app.use(ROUTING_MAP.internalPrefix, assetRouter);
     }
