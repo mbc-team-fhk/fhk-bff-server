@@ -1,18 +1,20 @@
-import { ok } from "./response.js";
 import { asyncHandler } from "./asyncHandler.js";
+import {buildForwardHeaders} from "../utils/authorization.js";
 
-export function makeProxyHandler({ client, method, pathResolver }) {
+
+export function makePrefixProxyHandler({ client, upstreamBasePath }) {
     return asyncHandler(async (req, res) => {
+        const suffix = req.path === "/" ? "" : req.path;
+
         const response = await client.request({
-            method,
-            url: pathResolver(req),
-            data: req.body,
+            method: req.method,
+            url: `${upstreamBasePath}${suffix}`,
             params: req.query,
-            headers: {
-                authorization: req.headers.authorization,
-            },
+            data: req.body,
+            headers: buildForwardHeaders(req),
         });
 
-        return ok(res, response?.data?.result ?? response?.data);
+        return res.status(response.status).json(response.data);
     });
 }
+

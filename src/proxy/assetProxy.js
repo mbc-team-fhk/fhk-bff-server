@@ -1,11 +1,11 @@
 import express from "express";
 import axios from "axios";
-import {ASSET_SERVER} from "../config.js";
-import {clearAuthCookies, handleApiError, requestLogger } from "../utils.js";
+import {clearAuthCookies, setAuthCookies} from '../utils/authCookies.js';
 import FormData from "form-data";
 
 const assetRouter = express.Router();
 
+// TODO : 에셋 서버 적용 필요
 
 // ----------------------------------------------------
 // 멀티파트 데이터 프록시 함수
