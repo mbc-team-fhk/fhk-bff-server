@@ -22,8 +22,8 @@ spec:
     spec:
       containers:
         - name: fhk-bff-server
-          image: juno6800/fhk-bff-server:latest
-          imagePullPolicy: Always
+          image: chaeyun430/fhk-bff-server:${GIT_TAG}
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4000
           env:
