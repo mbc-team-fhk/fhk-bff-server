@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import axios from "axios";
-import { ROUTING_MAP, FHK_FRONT_APP, PUBLIC_AUTH_PATH_RE, PROTECTED_PATH_RE, ALLOWED_ORIGINS } from "./config.js";
+import { ROUTING_MAP, ALLOWED_ORIGINS } from "./config.js";
 import assetRouter from "./proxy/asset.js";
 import authRouter from "./proxy/auth.js";
 import { proxyWithAutoRefresh,} from "./proxy/service.js";
@@ -23,6 +23,9 @@ axios.interceptors.response.use(res => {
 
 const app = express();
 
+/**
+ * CORS 처리
+ */
 const corsOption = {
     origin: ALLOWED_ORIGINS,
     credentials: true,

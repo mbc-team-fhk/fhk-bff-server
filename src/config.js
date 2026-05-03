@@ -16,20 +16,14 @@ const ASSET_SERVER = envOrDefault("FHK_ASSET_SERVER_URL", "http://fhk-asset-serv
  */
 const SERVICES = {
     TICKETING: {
-        FRONT_APP: envOrDefault("FHK_TICKETING_FRONT_APP_URL", "http://fhk-ticketing-front-app:80"),
-        MEMBER: envOrDefault("FHK_TICKETING_MEMBER_SERVICE_URL", "http://fhk-ticketing-member-service:8080"),
-        MOVIE: envOrDefault("FHK_TICKETING_MOVIE_SERVICE_URL", "http://fhk-ticketing-movie-service:8080"),
         PAYMENT: envOrDefault("FHK_TICKETING_PAYMENT_SERVICE_URL", "http://fhk-ticketing-payment-service:8080"),
         RESERVATION: envOrDefault("FHK_TICKETING_RESERVATION_SERVICE_URL", "http://fhk-ticketing-reservation-service:8080"),
-        TICKET: envOrDefault("FHK_TICKETING_TICKET_SERVICE_URL", "http://fhk-ticketing-ticket-service:8080"),
     },
-/*    CHATTING: {
-        FRONT_APP: "http://fhk-chatting-front-app:80",
-        CHAT: "http://fhk-chatting-chat-service:8080",
-        NOTIFICATION: "http://fhk-chatting-notification-service:8080",
-    },*/
+    CHATTING: {
+        CHAT: envOrDefault("FHK_CHATTING_CHATTING_SERVICE_URL", "http://fhk-chatting-chat-service:8080"),
+        NOTIFICATION: envOrDefault("FHK_CHATTING_NOTIFICATION_SERVICE_URL", "http://fhk-chatting-notification-service:8080"),
+    },
     FINANCIAL: {
-        FRONT_APP: envOrDefault("FHK_FINANCIAL_FRONT_APP_URL", "http://fhk-financial-front-app:80"),
         CUSTOMER: envOrDefault("FHK_FINANCIAL_CUSTOMER_SERVICE_URL", "http://fhk-financial-customer-service:8080"),
         MERCHANT: envOrDefault("FHK_FINANCIAL_MERCHANT_SERVICE_URL", "http://fhk-financial-merchant-service:8080"),
         PAYMENT: envOrDefault("FHK_FINANCIAL_PAYMENT_SERVICE_URL", "http://fhk-financial-payment-service:8080"),
@@ -39,21 +33,15 @@ const SERVICES = {
 
 const ARTIFACT_ROUTES = {
     ticketing: [
-        { sub: "front-app", url: SERVICES.TICKETING.FRONT_APP, internal: "/" },
-        { sub: "member", url: SERVICES.TICKETING.MEMBER, internal: "/member" },
-        { sub: "movie", url: SERVICES.TICKETING.MOVIE, internal: "/movie" },
         { sub: "payment", url: SERVICES.TICKETING.PAYMENT, internal: "/payment" },
         { sub: "reservation", url: SERVICES.TICKETING.RESERVATION, internal: "/reservation" },
-        { sub: "ticket", url: SERVICES.TICKETING.TICKET, internal: "/ticket" },
     ],
-/*    chatting: [
-        { sub: "front-app", url: SERVICES.CHATTING.FRONT, internal: "/" },
+    chatting: [
         { sub: "chatrooms", url: SERVICES.CHATTING.CHAT, internal: "/chatrooms" },
         { sub: "chat-users", url: SERVICES.CHATTING.CHAT, internal: "/chat-users" },
         { sub: "notification", url: SERVICES.CHATTING.NOTIFICATION, internal: "/notification" },
-    ],*/
+    ],
     financial: [
-        { sub: "front-app", url: SERVICES.FINANCIAL.FRONT_APP, internal: "/" },
         { sub: "customer", url: SERVICES.FINANCIAL.CUSTOMER, internal: "/customer" },
         { sub: "merchant", url: SERVICES.FINANCIAL.MERCHANT, internal: "/merchant" },
         { sub: "payment", url: SERVICES.FINANCIAL.PAYMENT, internal: "/payment" },
@@ -75,8 +63,11 @@ const ROUTING_MAP = [
 
 const PROTECTED_PATH_RE = /^\/api\/(member|orders|payment|store)(\/|$)/i;
 const PUBLIC_AUTH_PATH_RE = /^\/api\/auth\/(login|logout|refresh|v1\/login)$/i;
-const FHK_FRONT_APP = envOrDefault("FHK_PORTAL_FRONT_APP_URL", "https://fhk-portal-front-app:80");
-const ALLOWED_ORIGINS = [FHK_FRONT_APP, SERVICES.TICKETING.FRONT_APP, SERVICES.FINANCIAL.FRONT_APP];
+
+const ALLOWED_ORIGINS = envOrDefault(
+    "FHK_ALLOWED_ORIGINS",
+    "http://localhost:5173"
+).split(",").map(origin => origin.trim()).filter(Boolean);
 
 export {
     SECURITY_SERVER,
@@ -84,6 +75,5 @@ export {
     ROUTING_MAP,
     PROTECTED_PATH_RE,
     PUBLIC_AUTH_PATH_RE,
-    FHK_FRONT_APP,
     ALLOWED_ORIGINS,
 };
