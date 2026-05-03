@@ -1,7 +1,7 @@
 import axios from "axios";
-import { SECURITY_SERVER } from "../config.js";
+import { CORE_SERVICES } from "../config/index.js";
 
 export const securityApi = axios.create({
-    baseURL: SECURITY_SERVER,
+    baseURL: CORE_SERVICES.SECURITY,
     timeout: 5000,
 });
