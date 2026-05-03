@@ -1,24 +1,6 @@
-import { ok } from "./response.js";
 import { asyncHandler } from "./asyncHandler.js";
-<<<<<<< Updated upstream
-
-export function makeProxyHandler({ client, method, pathResolver }) {
-    return asyncHandler(async (req, res) => {
-        const response = await client.request({
-            method,
-            url: pathResolver(req),
-            data: req.body,
-            params: req.query,
-            headers: {
-                authorization: req.headers.authorization,
-            },
-        });
-
-        return ok(res, response?.data?.result ?? response?.data);
-=======
-import {buildForwardHeaders} from "../utils/authorization.js";
-import {clearAuthOnRefreshFailure, refreshAuth} from "../utils/refreshAuth.js";
-
+import { buildForwardHeaders } from "../utils/authorization.js";
+import { clearAuthOnRefreshFailure, refreshAuth } from "../utils/refreshAuth.js";
 
 export function makePrefixProxyHandler({ client, upstreamBasePath, protectedRoute = false, securityBaseUrl }) {
     return asyncHandler(async (req, res) => {
@@ -60,6 +42,5 @@ export function makePrefixProxyHandler({ client, upstreamBasePath, protectedRout
                 throw refreshError;
             }
         }
->>>>>>> Stashed changes
     });
 }

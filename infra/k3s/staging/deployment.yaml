@@ -27,9 +27,6 @@ spec:
           ports:
             - containerPort: 4000
           env:
-            # Frontend
-            - name: FHK_ALLOWED_ORIGINS
-              value: "https://qa.fhk-team.org"
 
             # Security / Asset
             - name: FHK_SECURITY_SERVER_URL

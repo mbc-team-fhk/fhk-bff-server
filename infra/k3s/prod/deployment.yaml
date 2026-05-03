@@ -27,9 +27,6 @@ spec:
           ports:
             - containerPort: 4000
           env:
-            # Frontend
-            - name: FHK_ALLOWED_ORIGINS
-              value: "https://www.fhk-team.org,https://fhk-team.org"
 
             # Security / Asset
             - name: FHK_SECURITY_SERVER_URL
@@ -52,7 +49,7 @@ spec:
             # Financial services (일단 유지)
             - name: FHK_FINANCIAL_CUSTOMER_SERVICE_URL
               value: "http://fhk-financial-customer-service:8080"
-            - name: FHK_FINANCIAL_MERCHANT_SERVICE_URL
-              value: "http://fhk-financial-merchant-service:8080"
             - name: FHK_FINANCIAL_PAYMENT_SERVICE_URL
               value: "http://fhk-financial-payment-service:8080"
+            - name: FHK_FINANCIAL_STORE_SERVICE_URL
+              value: "http://fhk-financial-store-service:8080"

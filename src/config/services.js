@@ -24,17 +24,9 @@ export const CORE_SERVICES = {
 
 /**
  * Ticketing
- * @type {{PAYMENT: *, MOVIE: *, RESERVATION: *, TICKET: *, MEMBER: *}}
+ * @type {{RESERVATION: *, PAYMENT: *}}
  */
 export const TICKETING_SERVICES = {
-    MEMBER: envOrDefault(
-        'FHK_TICKETING_MEMBER_SERVICE_URL',
-        'http://localhost:9101'
-    ),
-    MOVIE: envOrDefault(
-        'FHK_TICKETING_MOVIE_SERVICE_URL',
-        'http://localhost:9102'
-    ),
     RESERVATION: envOrDefault(
         'FHK_TICKETING_RESERVATION_SERVICE_URL',
         'http://localhost:9101'
@@ -42,10 +34,6 @@ export const TICKETING_SERVICES = {
     PAYMENT: envOrDefault(
         'FHK_TICKETING_PAYMENT_SERVICE_URL',
         'http://localhost:9102'
-    ),
-    TICKET: envOrDefault(
-        'FHK_TICKETING_TICKET_SERVICE_URL',
-        'http://localhost:9105'
     ),
 };
 
@@ -66,15 +54,19 @@ export const CHATTING_SERVICES = {
 
 /**
  * Financial
- * @type {{PAYMENT: *, CLIENT: *}}
+ * @type {{PAYMENT: *, STORE: *, CUSTOMER: *}}
  */
 export const FINANCIAL_SERVICES = {
-    CLIENT: envOrDefault(
-        'FHK_FINANCIAL_CLIENT_SERVICE_URL',
+    CUSTOMER: envOrDefault(
+        'FHK_FINANCIAL_CUSTOMER_SERVICE_URL',
         'http://localhost:9301'
     ),
     PAYMENT: envOrDefault(
         'FHK_FINANCIAL_PAYMENT_SERVICE_URL',
         'http://localhost:9302'
+    ),
+    STORE: envOrDefault(
+        'FHK_FINANCIAL_STORE_SERVICE_URL',
+        'http://localhost:9303'
     ),
 };
