@@ -27,6 +27,9 @@ spec:
           ports:
             - containerPort: 4000
           env:
+            # Frontend
+            - name: FHK_PORTAL_FRONT_APP_URL
+              value: "https://fhk-portal-front-app:80"
 
             # Security / Asset
             - name: FHK_SECURITY_SERVER_URL
@@ -35,6 +38,8 @@ spec:
               value: "http://fhk-asset-server:8080"
 
             # Ticketing services
+            - name: FHK_TICKETING_FRONT_APP_URL
+              value: "http://fhk-ticketing-front-app:80"
             - name: FHK_TICKETING_MEMBER_SERVICE_URL
               value: "http://fhk-ticketing-member-service:8080"
             - name: FHK_TICKETING_MOVIE_SERVICE_URL
@@ -53,7 +58,11 @@ spec:
               value: "http://fhk-chatting-notification-service:8080"
 
             # Financial services
-            - name: FHK_FINANCIAL_CLIENT_SERVICE_URL
-              value: "http://fhk-financial-client-service:8080"
+            - name: FHK_FINANCIAL_FRONT_APP_URL
+              value: "http://fhk-financial-front-app:80"
+            - name: FHK_FINANCIAL_CUSTOMER_SERVICE_URL
+              value: "http://fhk-financial-customer-service:8080"
+            - name: FHK_FINANCIAL_MERCHANT_SERVICE_URL
+              value: "http://fhk-financial-merchant-service:8080"
             - name: FHK_FINANCIAL_PAYMENT_SERVICE_URL
               value: "http://fhk-financial-payment-service:8080"

@@ -1,9 +1,13 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+function envOrDefault(envName, defaultValue) {
+    return process.env[envName] || defaultValue;
+}
+
 // 서비스 URL 환경 변수
-const SECURITY_SERVER = "http://fhk-security-server:8080";
-const ASSET_SERVER = "http://fhk-asset-server:8080";
+const SECURITY_SERVER = envOrDefault("FHK_SECURITY_SERVER_URL", "http://fhk-security-server:8080");
+const ASSET_SERVER = envOrDefault("FHK_ASSET_SERVER_URL", "http://fhk-asset-server:8080");
 
 /**
  * ...... dev환경의 default 옵션 같음 -> 배포시 deployment에서 경로지정
@@ -12,12 +16,12 @@ const ASSET_SERVER = "http://fhk-asset-server:8080";
  */
 const SERVICES = {
     TICKETING: {
-        FRONT_APP: "http://fhk-ticketing-front-app:80",
-        MEMBER: "http://fhk-ticketing-member-service:8080",
-        MOVIE: "http://fhk-ticketing-movie-service:8080",
-        PAYMENT: "http://fhk-ticketing-payment-service:8080",
-        RESERVATION: "http://fhk-ticketing-reservation-service:8080",
-        TICKET: "http://fhk-ticketing-ticket-service:8080",
+        FRONT_APP: envOrDefault("FHK_TICKETING_FRONT_APP_URL", "http://fhk-ticketing-front-app:80"),
+        MEMBER: envOrDefault("FHK_TICKETING_MEMBER_SERVICE_URL", "http://fhk-ticketing-member-service:8080"),
+        MOVIE: envOrDefault("FHK_TICKETING_MOVIE_SERVICE_URL", "http://fhk-ticketing-movie-service:8080"),
+        PAYMENT: envOrDefault("FHK_TICKETING_PAYMENT_SERVICE_URL", "http://fhk-ticketing-payment-service:8080"),
+        RESERVATION: envOrDefault("FHK_TICKETING_RESERVATION_SERVICE_URL", "http://fhk-ticketing-reservation-service:8080"),
+        TICKET: envOrDefault("FHK_TICKETING_TICKET_SERVICE_URL", "http://fhk-ticketing-ticket-service:8080"),
     },
 /*    CHATTING: {
         FRONT_APP: "http://fhk-chatting-front-app:80",
@@ -25,17 +29,17 @@ const SERVICES = {
         NOTIFICATION: "http://fhk-chatting-notification-service:8080",
     },*/
     FINANCIAL: {
-        FRONT_APP: "http://fhk-financial-front-app:80",
-        CUSTOMER: "http://fhk-financial-customer-service:8080",
-        MERCHANT: "http://fhk-financial-merchant-service:8080",
-        PAYMENT: "http://fhk-financial-payment-service:8080",
+        FRONT_APP: envOrDefault("FHK_FINANCIAL_FRONT_APP_URL", "http://fhk-financial-front-app:80"),
+        CUSTOMER: envOrDefault("FHK_FINANCIAL_CUSTOMER_SERVICE_URL", "http://fhk-financial-customer-service:8080"),
+        MERCHANT: envOrDefault("FHK_FINANCIAL_MERCHANT_SERVICE_URL", "http://fhk-financial-merchant-service:8080"),
+        PAYMENT: envOrDefault("FHK_FINANCIAL_PAYMENT_SERVICE_URL", "http://fhk-financial-payment-service:8080"),
     },
 };
 
 
 const ARTIFACT_ROUTES = {
     ticketing: [
-        { sub: "front-app", url: SERVICES.TICKETING.FRONT, internal: "/" },
+        { sub: "front-app", url: SERVICES.TICKETING.FRONT_APP, internal: "/" },
         { sub: "member", url: SERVICES.TICKETING.MEMBER, internal: "/member" },
         { sub: "movie", url: SERVICES.TICKETING.MOVIE, internal: "/movie" },
         { sub: "payment", url: SERVICES.TICKETING.PAYMENT, internal: "/payment" },
@@ -49,7 +53,7 @@ const ARTIFACT_ROUTES = {
         { sub: "notification", url: SERVICES.CHATTING.NOTIFICATION, internal: "/notification" },
     ],*/
     financial: [
-        { sub: "front-app", url: SERVICES.FINANCIAL.FRONT, internal: "/" },
+        { sub: "front-app", url: SERVICES.FINANCIAL.FRONT_APP, internal: "/" },
         { sub: "customer", url: SERVICES.FINANCIAL.CUSTOMER, internal: "/customer" },
         { sub: "merchant", url: SERVICES.FINANCIAL.MERCHANT, internal: "/merchant" },
         { sub: "payment", url: SERVICES.FINANCIAL.PAYMENT, internal: "/payment" },
@@ -71,7 +75,7 @@ const ROUTING_MAP = [
 
 const PROTECTED_PATH_RE = /^\/api\/(member|orders|payment|store)(\/|$)/i;
 const PUBLIC_AUTH_PATH_RE = /^\/api\/auth\/(login|logout|refresh|v1\/login)$/i;
-const FHK_FRONT_APP = "https://fhk-portal-front-app:80";
+const FHK_FRONT_APP = envOrDefault("FHK_PORTAL_FRONT_APP_URL", "https://fhk-portal-front-app:80");
 const ALLOWED_ORIGINS = [FHK_FRONT_APP, SERVICES.TICKETING.FRONT_APP, SERVICES.FINANCIAL.FRONT_APP];
 
 export {
