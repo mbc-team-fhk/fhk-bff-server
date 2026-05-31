@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fhk-bff-server
+  namespace: staging
+  labels:
+    app: fhk-bff-server
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: fhk-bff-server
+  template:
+    metadata:
+      labels:
+        app: fhk-bff-server
+    spec:
+      containers:
+        - name: fhk-bff-server
+          image: chaeyun430/fhk-bff-server:${GIT_TAG}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4000
+          env:
+
+            # Security / Asset
+            - name: FHK_SECURITY_SERVER_URL
+              value: "http://fhk-security-server:8080"
+            - name: FHK_ASSET_SERVER_URL
+              value: "http://fhk-asset-server:8080"
+
+            # Ticketing services
+            - name: FHK_TICKETING_PAYMENT_SERVICE_URL
+              value: "http://fhk-ticketing-payment-service:8080"
+            - name: FHK_TICKETING_RESERVATION_SERVICE_URL
+              value: "http://fhk-ticketing-reservation-service:8080"
+
+            # Chatting services (일단 유지)
+            - name: FHK_CHATTING_CHATTING_SERVICE_URL
+              value: "http://fhk-chatting-chat-service:8080"
+            - name: FHK_CHATTING_NOTIFICATION_SERVICE_URL
+              value: "http://fhk-chatting-notification-service:8080"
+
+            # Financial services (일단 유지)
+            - name: FHK_FINANCIAL_CUSTOMER_SERVICE_URL
+              value: "http://fhk-financial-customer-service:8080"
+            - name: FHK_FINANCIAL_MERCHANT_SERVICE_URL
+              value: "http://fhk-financial-merchant-service:8080"
+            - name: FHK_FINANCIAL_PAYMENT_SERVICE_URL
+              value: "http://fhk-financial-payment-service:8080"

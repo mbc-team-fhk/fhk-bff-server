@@ -1,0 +1,119 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_NAME        = 'fhk-bff-server'
+        REGISTRY        = 'chaeyun430'
+        IMAGE           = "${REGISTRY}/${APP_NAME}"
+        DOCKERFILE_PATH = 'infra/docker/Dockerfile'  // BFF Dockerfile 경로
+    }
+
+    options {
+        timestamps()
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh 'git fetch --tags || true'
+
+                script {
+                    def gitBranch = env.GIT_BRANCH ?: ''
+                    env.BRANCH_NAME = gitBranch.tokenize('/').last()
+                    echo "GIT_BRANCH=${gitBranch}, BRANCH_NAME=${env.BRANCH_NAME}"
+                }
+            }
+        }
+
+        stage('Install dependencies') {
+            steps {
+                sh 'npm ci || npm install'
+            }
+        }
+
+        stage('Docker build & push (tagged only)') {
+            steps {
+                script {
+                    def tag = sh(
+                        script: "git describe --tags --exact-match 2>/dev/null || echo NO_TAG",
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Branch: ${env.BRANCH_NAME}, Tag: ${tag}"
+
+                    if (env.BRANCH_NAME == 'dev') {
+                        echo "dev 브랜치 -> Docker build & push 스킵"
+                        return
+                    }
+                    if (tag == 'NO_TAG') {
+                        echo "태그 없음 -> Docker build & push 스킵"
+                        return
+                    }
+
+                    env.IMAGE_TAG = tag
+
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub-cred-chaeyun',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKERHUB_PASS'
+                    )]) {
+                        sh """
+                          echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                          docker build -f ${DOCKERFILE_PATH} -t ${IMAGE}:${env.IMAGE_TAG} -t ${IMAGE}:latest .
+                          docker push ${IMAGE}:${env.IMAGE_TAG}
+                          docker push ${IMAGE}:latest
+                        """
+                    }
+                }
+            }
+        }
+
+       stage('Deploy to k3s (staging/prod, tagged only)') {
+           steps {
+               script {
+                   def tag = sh(
+                       script: "git describe --tags --exact-match 2>/dev/null || echo NO_TAG",
+                       returnStdout: true
+                   ).trim()
+
+                   if (env.BRANCH_NAME == 'dev' || tag == 'NO_TAG') {
+                       echo "dev 브랜치이거나 태그 없음 -> 배포 스킵"
+                       return
+                   }
+
+                   String k8sNamespace
+                   String k8sDir
+
+                   if (env.BRANCH_NAME == 'staging') {
+                       k8sNamespace = 'staging'
+                       k8sDir = 'infra/k3s/staging'
+                   } else if (env.BRANCH_NAME == 'prod') {
+                       k8sNamespace = 'prod'
+                       k8sDir = 'infra/k3s/prod'
+                   } else {
+                       echo "지원하지 않는 브랜치 -> 배포 스킵"
+                       return
+                   }
+
+                   withEnv([
+                       "GIT_TAG=${tag}",
+                       "KUBECONFIG=/var/lib/jenkins/.kube/config"
+                   ]) {
+                       sh """
+                         echo "Using GIT_TAG=$GIT_TAG"
+                         envsubst < ${k8sDir}/deployment.yaml | kubectl -n ${k8sNamespace} apply -f -
+                         kubectl -n ${k8sNamespace} rollout status deployment fhk-bff-server --timeout=300s
+                       """
+                   }
+               }
+           }
+       }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
