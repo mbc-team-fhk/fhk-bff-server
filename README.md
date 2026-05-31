@@ -1,50 +1,59 @@
-# fhk-financial-bff-server
-> FE-BE Bridge Server's Features
-- **라우팅 테이블/맵 정의**
-  - 서비스별 요청 경로와 내부 URL 매핑을 정의하여 중앙에서 관리
-- **동적 Base URL 결정**
-  - 들어오는 요청의 req.path를 분석하여 해당 서비스의 URL을 SERVICE_MAP에서 조회
-  - 조회된 URL로 Axios 요청을 전송
-- **FHK 팀 정책 반영 - Auth & Asset**
-  - Auth: Access/Refresh Token 처리, 쿠키 기반 인증
-  - Asset: 인증 없이 파일 업로드 및 다운로드 프록시 처리
+# fhk-bff-server
 
->기술 스택
-- Node.js 20 (ESM), Express 5
-- Docker + K3s
-- JWT Auth (AT/RT), Cookie 기반
-- Axios Proxy to Microservices
-- Multipart Upload with FormData + Multer
+프론트엔드와 내부 MSA 서비스 사이에 있는 BFF 서버입니다. 브라우저 요청을 서비스별 API로 라우팅하고, 로그인 이후 발급되는 JWT를 HttpOnly cookie로 관리합니다.
 
->Run Locally 수정 필요
-```bash
-cp .env.example .env
-docker build -t fhk-bff-server .
-docker run -p 4000:4000 --env-file .env fhk-bff-server
+## Role
+
+- `/api/security/**` 요청을 security-server로 전달
+- `/api/ticketing/**` 요청을 reservation/payment 서비스로 전달
+- access token과 refresh token을 `AT`, `RT` cookie로 관리
+- 보호 API에서 401 응답이 발생하면 refresh token으로 토큰 재발급 후 요청 재시도
+- 프론트엔드가 직접 내부 서비스 주소를 알지 않도록 API 진입점 단일화
+
+## Request Flow
+
+```text
+React App
+  -> fhk-bff-server
+  -> route match
+  -> target microservice
 ```
-<hr></hr>
 
-### 문제해결과정
+로그인 성공 시 security-server 응답의 access token과 refresh token을 BFF가 cookie로 내려줍니다. 이후 보호 API 요청은 cookie의 access token을 `Authorization: Bearer` 헤더로 변환해 내부 서비스에 전달합니다.
 
-<details>
-   <summary><strong>Issue 1. Jenkins 배포단계 kubernetes pod의 타임아웃_251224</strong></summary><br/>
+## Route Map
 
-> 문제 상황
-- Jenkins pipeline 중 `stage('Deploy to k3s (staging/prod, tagged only)') `단계에서 여러 차례 타임 아웃으로 배포 실패
-> 원인 분석
-- 이전에 배포를 완료한 이력이 있기에 그 이후의 주요 변경사항을 관찰
-  1. Jenkins credentials에 docker-hub, git-token 적용할 타 사용자 등록
-  2. Jenkinsfile 내부 도커 허브 registry 변경
-  3. src 폴더 하위에 소스파일 배치
-  4. docker 태그를 latest에서 동적 git-tag로 변경
-> 해결 방법
-- docker build, push, pull 모두 완료 되었고, 환경변수도 적절히 주입되었기에 1,2 배제
-- 도커 이미지 인식 문제 의심 ->  4로 변경
-- npm run dev시 소스파일 간의 import 오류 발생 -> 수정
-- 로컬에서 dockerfile 내부 cmd 명령어로 실행 -> index.js => src/index.js
-> 결론
-- 디버깅할 때 이전 성공이력이 있다면 이후 변경사항 분석
-- 배포 운영의 단계에만 치중되어 기본적인 로컬 실행 테스트를 잊지말 것
-</details>
+| Prefix | Target | Protected |
+| --- | --- | --- |
+| `/api/security` | fhk-security-server | Mixed |
+| `/api/asset` | asset service | No |
+| `/api/ticketing/reservation` | ticketing reservation service | Yes |
+| `/api/ticketing/payment` | ticketing payment service | Yes |
+| `/api/chatting/chat` | chatting service | Yes |
+| `/api/chatting/notification` | notification service | Yes |
+| `/api/financial/client` | financial customer service | Yes |
+| `/api/financial/payment` | financial payment service | Yes |
 
-소스 베이스 : https://github.com/mbc-group-4-two/mbc-dvd-market-bff 
+## Tech Stack
+
+- Node.js, Express 5
+- Axios
+- cookie-parser
+- jsonwebtoken
+- Docker, k3s
+
+## Run Locally
+
+```bash
+npm install
+npm start
+```
+
+대표 환경 변수입니다.
+
+```env
+PORT=4000
+FHK_SECURITY_SERVER_URL=http://localhost:9000
+FHK_TICKETING_RESERVATION_SERVICE_URL=http://localhost:9101
+FHK_TICKETING_PAYMENT_SERVICE_URL=http://localhost:9102
+```
